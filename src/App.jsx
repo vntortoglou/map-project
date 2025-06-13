@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import SideBar from "./components/SideBar";
 
 function App() {
 
@@ -28,7 +29,10 @@ function App() {
   }, []);
 
   return (
-    <div style={{ height: "100vh" }}>
+    <>
+       <div className="flex h-screen">
+    <SideBar></SideBar>
+    <div style={{ height: "100vh"}}>
       {position && (
         <MapContainer
           center={position}
@@ -42,6 +46,8 @@ function App() {
         </MapContainer>
       )}
     </div>
+    </div>
+    </>
   );
 }
 
