@@ -1,6 +1,6 @@
 import SearchBar from "./SearchBar";
 
-export default function Sidebar({ handleSearch }) {
+export default function SideBar({ handleSearch }) {
   return (
 <div>
 <SearchBar handleSearch={handleSearch}></SearchBar>
