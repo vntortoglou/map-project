@@ -1,37 +1,63 @@
 import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import "leaflet/dist/leaflet.css";
-import SideBar from "./components/SideBar";
 import axios from "axios";
 import "./App.css"; // Assuming you have some styles in App.css
+import MainPageLayout from "./layouts/MainPageLayout"; // Νέο Layout
+
+// Εισαγωγή των νέων panel components
+import CityDetailsDisplay from "./components/MenuPages/CityDetailsDisplay";
+import WeatherDisplay from "./components/MenuPages/WeatherDisplay";
+import PointsOfInterestDisplay from "./components/MenuPages/PointsOfInterestDisplay";
+import InstructionsDisplay from "./components/MenuPages/InstructionsDisplay";
+import DefaultInfoMessage from "./components/MenuPages/DefaultInfoMessage";
+
+// Fix Leaflet marker icons
+import L from "leaflet";
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+});
 
 function App() {
   const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
-  // Code to get default Position with Geolocation
-  const [position, setPosition] = useState(null);
+  const [mapCenter, setMapCenter] = useState([40.6401, 22.9444]); // Default to Thessaloniki
+  const [markerPosition, setMarkerPosition] = useState(null);
+  const [currentCityData, setCurrentCityData] = useState(null);
+  const [popupInfo, setPopupInfo] = useState("");
+
+  const navigate = useNavigate(); // Hook για πλοήγηση
 
   useEffect(() => {
+    // Get user's current location
     const options = {
       enableHighAccuracy: true,
       timeout: 5000,
       maximumAge: 0,
     };
-
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        setPosition([latitude, longitude]);
+        setMapCenter([latitude, longitude]);
       },
       (err) => {
         console.warn(`Geolocation ERROR(${err.code}): ${err.message}`);
-        setPosition([40.6401, 22.9444]); // Thessaloniki coordinates
+        setMapCenter([40.6401, 22.9444]); // Thessaloniki coordinates as fallback
       },
       options
     );
-  }, []);
-
+  }, []); // Empty dependency array ensures this runs only once on mount
+  
   async function handleSearch(cityName) {
+    if (!apiKey) {
+      console.error("OpenWeather API key is not set. Please check your .env file.");
+      alert("API key is missing. Cannot perform search.");
+      return;
+    }
+
     const limit = 1;
     const url = `https://api.openweathermap.org/geo/1.0/direct`;
 
@@ -45,59 +71,55 @@ function App() {
       });
 
       const data = response.data;
-      console.log(data);
+      if (data.length === 0) {
+        alert("City not found. Please try another name.");
+        setCurrentCityData(null); // Clear previous city data if any
+        setMarkerPosition(null);
+        setPopupInfo("");
+        return;
+      }
 
-      if (data.length === 0) throw new Error("City not found");
+      const city = data[0];
+      const { lat, lon, name: foundCityName, country, state } = city;
+      const locationName = `${foundCityName}${state ? `, ${state}` : ''}, ${country}`;
 
-      const { lat, lon } = data[0];
-      setPosition([lat, lon]);
+      setMapCenter([lat, lon]);
+      setMarkerPosition([lat, lon]);
+      setCurrentCityData(city);
+      setPopupInfo(locationName);
+      navigate('/details'); // Navigate to details page after successful search
     } catch (err) {
-      console.error("Geocoding error:", err.message);
-      return null;
+      console.error("Geocoding error:", err);
+      alert("An error occurred while searching for the city. Please try again.");
+      setCurrentCityData(null);
+      setMarkerPosition(null);
+      setPopupInfo("");
     }
   }
-
-  function MapUpdater({ position }) {
-    const map = useMap();
-
-    useEffect(() => {
-      if (position) {
-        map.flyTo(position, 13);
-      }
-    }, [position, map]);
-
-    return null;
-  }
-
+  
   return (
     <>
-    <div className="flex h-screen">
-      {/* Left Column: Sidebar */}
-      <div className="w-1/4 p-4 bg-gray-100 shadow-md overflow-y-auto">
-        <SideBar handleSearch={handleSearch} />
-      </div>
-      {/* Right Column: Map */}
-      <div className="w-3/4 h-full">
-        {position ? (
-          <MapContainer
-            center={position}
-            zoom={13}
-            style={{ height: "100%", width: "100%" }} // Map fills this container
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      {/* Το BrowserRouter είναι ήδη στο main.jsx */}
+      <Routes>
+        <Route 
+          path="/" 
+          element={
+            <MainPageLayout 
+              currentCityData={currentCityData}
+              handleSearch={handleSearch}
+              mapCenter={mapCenter}
+              markerPosition={markerPosition}
+              popupInfo={popupInfo}
             />
-            <MapUpdater position={position} />
-          </MapContainer>
-        ) : (
-          // Optional: Display a loading message or placeholder if position is not yet available
-          <div className="flex items-center justify-center h-full text-gray-500">
-            <p>Initializing map and location...</p>
-          </div>
-        )}
-      </div>
-    </div>
+          }
+        >
+          <Route index element={<DefaultInfoMessage />} />
+          <Route path="details" element={<CityDetailsDisplay />} />
+          <Route path="weather" element={<WeatherDisplay />} />
+          <Route path="poi" element={<PointsOfInterestDisplay />} />
+          <Route path="instructions" element={<InstructionsDisplay />} />
+        </Route>
+      </Routes>
     </>
   );
 }

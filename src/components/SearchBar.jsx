@@ -5,23 +5,23 @@ export default function SearchBar({ handleSearch }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (cityName.trim() === "") {
+    if (cityName.trim() !== "") {
       handleSearch(cityName); // Default city if input is empty
+      setCityName(""); // Clear input after search
     }
   };
 
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <label className="text-2xl font-bold mb-2">Search City</label>
-        <div className="border-1 rounded p-2 mb-4">
+        <div className="rounded p-2 mb-4">
+          <button type="submit" aria-label="Search" className="pr-2">🔍</button>
           <input 
             value={cityName}
             onChange={(e) => setCityName(e.target.value)}
-            className="w-80%"
-            placeholder="Enter city name"
+            className="w-4/5"
+            placeholder="Search for a city"
           />
-          <button type="submit" aria-label="Search" className="pr-2">🔍</button>
         </div>
       </form>
     </div>
