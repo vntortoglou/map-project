@@ -17,7 +17,7 @@ export default function CityDetailsDisplay() {
         setWikipediaError(null);
         setWikipediaExtract('');
 
-        const WIKIPEDIA_API_URL = `https://${lang}.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&explaintext=true&redirects=1&origin=*&titles=${cityData.name}`;
+        const WIKIPEDIA_API_URL = `https://el.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&explaintext=true&redirects=1&origin=*&titles=${cityData.name}`;
         
         try {
           const response = await fetch(WIKIPEDIA_API_URL);
@@ -25,6 +25,7 @@ export default function CityDetailsDisplay() {
             throw new Error('Network response was not ok');
           }
           const data = await response.json();
+          
           const page = Object.values(data.query.pages)[0];
           setWikipediaExtract(page.extract || 'Information not found at Wikipedia.');
         }
