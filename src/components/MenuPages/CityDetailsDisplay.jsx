@@ -1,13 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 
 export default function CityDetailsDisplay() {
   const { cityData } = useOutletContext();
   const navigate = useNavigate();
 
+  const [wikipediaExtract, setWikipediaExtract] = useState('');
+  const [isLoadingWikipedia, setIsLoadingWikipedia] = useState(false);
+  const [wikipediaError, setWikipediaError] = useState(null);
+
+
+  useEffect(() => {
+    if (cityData && cityData.name) {
+      const fetchWikipediaLink = async () => {
+        setIsLoadingWikipedia(true);
+        setWikipediaError(null);
+        setWikipediaExtract('');
+
+        const WIKIPEDIA_API_URL = `https://${lang}.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&explaintext=true&redirects=1&origin=*&titles=${cityData.name}`;
+        
+        try {
+          const response = await fetch(WIKIPEDIA_API_URL);
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          const data = await response.json();
+          const page = Object.values(data.query.pages)[0];
+          setWikipediaExtract(page.extract || 'Information not found at Wikipedia.');
+        }
+        catch (error) {
+          setWikipediaError(`Error fetching Wikipedia data: ${error.message}`);
+        }
+        finally {
+          setIsLoadingWikipedia(false);
+        }
+
+
+      };
+    fetchWikipediaLink();
+    }
+  }, [cityData]);
+
   const handleClose = () => {
     navigate('/'); // Πλοήγηση στην αρχική διαδρομή για "κλείσιμο"
   };
+
+  const wikipediaUrl = cityData ? `https://wikipedia.org/wiki/${encodeURIComponent(cityData.name)}` : null;
 
   return (
     <div className="relative">
@@ -22,6 +60,7 @@ export default function CityDetailsDisplay() {
         </button>
       </div>
       {cityData ? (
+        <>
         <ul className="text-sm space-y-1 mt-2">
           <li><strong>Name:</strong> {cityData.name}</li>
           <li><strong>Country:</strong> {cityData.country}</li>
@@ -29,8 +68,34 @@ export default function CityDetailsDisplay() {
           <li><strong>Latitude:</strong> {cityData.lat.toFixed(4)}</li>
           <li><strong>Longitude:</strong> {cityData.lon.toFixed(4)}</li>
         </ul>
+
+          {isLoadingWikipedia && (
+            <p className="text-sm text-gray-400 mt-4">Loading information from Wikipedia...</p>
+          )}
+
+          {wikipediaError && (
+            <p className="text-sm text-red-500 mt-4">{wikipediaError}</p>
+          )}
+
+          {wikipediaExtract && !isLoadingWikipedia && (
+            <div className="mt-4">
+              <h4 className="font-semibold">Wikipedia:</h4>
+              <p className="text-sm">{wikipediaExtract}</p>
+              {wikipediaUrl && (
+                <a
+                  href={wikipediaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline mt-2 block"
+                >
+                  more about Wikipedia
+                </a>
+              )}
+            </div>
+          )}
+        </>
       ) : (
-        <p className="mt-2">No city data available. Perform a search to see details.</p>
+        <p className="mt-2">Search a city for more information.</p>
       )}
     </div>
   );
