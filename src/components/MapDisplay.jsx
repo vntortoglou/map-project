@@ -6,7 +6,10 @@ function MapFlyToCenter({ center }) {
   const map = useMap();
   useEffect(() => {
     if (center) {
-      map.flyTo(center, 13);
+      map.flyTo(center, 13,{
+        animate: true,
+        duration: 1.5,
+      });
     }
   }, [center, map]);
   return null;
