@@ -1,10 +1,10 @@
 import React from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import SideBar from "./SideBar";
+import SearchBar from "./SearchBar";
 
 const menuButtonClass =
   "w-full text-left p-2.5 mb-2 rounded-md transition-colors duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400";
-const activeMenuButtonClass = "bg-blue-500 text-white hover:bg-blue-600";
+const activeMenuButtonClass = "bg-yellow-500 text-white hover:bg-blue-600";
 const inactiveMenuButtonClass = "bg-gray-200 hover:bg-gray-300 text-gray-700";
 
 export default function ControlPanel({ currentCityData, handleSearch }) {
@@ -24,7 +24,7 @@ export default function ControlPanel({ currentCityData, handleSearch }) {
         <h1 className="text-2xl sm:text-3xl font-bold text-blue-600">
           Map Explorer
         </h1>
-        <SideBar handleSearch={handleSearch} />
+        <SearchBar handleSearch={handleSearch} />
         <nav className="flex-grow flex flex-col space-y-1">
           <h2 className="text-xs uppercase text-gray-500 font-semibold my-2 tracking-wider">
             Menu

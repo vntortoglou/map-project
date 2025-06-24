@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function CityDetailsDisplay() {
   const { cityData } = useOutletContext();
@@ -9,7 +10,6 @@ export default function CityDetailsDisplay() {
   const [isLoadingWikipedia, setIsLoadingWikipedia] = useState(false);
   const [wikipediaError, setWikipediaError] = useState(null);
 
-
   useEffect(() => {
     if (cityData && cityData.name) {
       const fetchWikipediaLink = async () => {
@@ -17,16 +17,22 @@ export default function CityDetailsDisplay() {
         setWikipediaError(null);
         setWikipediaExtract('');
 
-        const WIKIPEDIA_API_URL = `https://el.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&explaintext=true&redirects=1&origin=*&titles=${cityData.name}`;
-        
         try {
-          const response = await fetch(WIKIPEDIA_API_URL);
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          const data = await response.json();
-          
-          const page = Object.values(data.query.pages)[0];
+          const response = await axios.get('https://el.wikipedia.org/w/api.php', {
+            params: {
+              action: 'query',
+              format: 'json',
+              prop: 'extracts',
+              exintro: true,
+              explaintext: true,
+              redirects: 1,
+              origin: '*',
+              titles: cityData.name,
+            },
+          });
+
+          const pages = response.data.query.pages;
+          const page = Object.values(pages)[0];
           setWikipediaExtract(page.extract || 'Information not found at Wikipedia.');
         }
         catch (error) {
@@ -35,10 +41,8 @@ export default function CityDetailsDisplay() {
         finally {
           setIsLoadingWikipedia(false);
         }
-
-
       };
-    fetchWikipediaLink();
+      fetchWikipediaLink();
     }
   }, [cityData]);
 
@@ -62,13 +66,13 @@ export default function CityDetailsDisplay() {
       </div>
       {cityData ? (
         <>
-        <ul className="text-sm space-y-1 mt-2">
-          <li><strong>Name:</strong> {cityData.name}</li>
-          <li><strong>Country:</strong> {cityData.country}</li>
-          {cityData.state && <li><strong>State:</strong> {cityData.state}</li>}
-          <li><strong>Latitude:</strong> {cityData.lat.toFixed(4)}</li>
-          <li><strong>Longitude:</strong> {cityData.lon.toFixed(4)}</li>
-        </ul>
+          <ul className="text-sm space-y-1 mt-2">
+            <li><strong>Name:</strong> {cityData.name}</li>
+            <li><strong>Country:</strong> {cityData.country}</li>
+            {cityData.state && <li><strong>State:</strong> {cityData.state}</li>}
+            <li><strong>Latitude:</strong> {cityData.lat.toFixed(4)}</li>
+            <li><strong>Longitude:</strong> {cityData.lon.toFixed(4)}</li>
+          </ul>
 
           {isLoadingWikipedia && (
             <p className="text-sm text-gray-400 mt-4">Loading information from Wikipedia...</p>

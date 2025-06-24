@@ -24,6 +24,9 @@ L.Icon.Default.mergeOptions({
 function App() {
   const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
+  //state management
+  // Χρησιμοποιούμε useState για να διαχειριστούμε την κατάσταση της εφαρμογής
+  // και να αποθηκεύσουμε την τρέχουσα τοποθεσία του χρήστη, τη θέση του marker, τα δεδομένα της τρέχουσας πόλης και πληροφορίες για το popup.
   const [mapCenter, setMapCenter] = useState([40.6401, 22.9444]); // Default to Thessaloniki
   const [markerPosition, setMarkerPosition] = useState(null);
   const [currentCityData, setCurrentCityData] = useState(null);
